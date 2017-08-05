@@ -12,6 +12,7 @@ class punish(main):
             self.message_id = None
         else:    
             self.userresp = self.msg['reply_to_message']['from']['first_name']
+            self.usernamerep = self.msg['reply_to_message']['from']['username']
             self.user_id = self.msg['reply_to_message']['from']['id']
             self.message_id = self.msg['reply_to_message']['message_id']
         
@@ -31,7 +32,7 @@ class punish(main):
             list_ban.write('<i>' + self.userresp + '<i>'+'\n')
 
 
-        self.bot.sendMessage(chat_id=self.chat_id, parse_mode='HTML', text='<b>{1}</b> banned by <b>{0}!</b>'.format(self.user,self.userresp))
+        self.bot.sendMessage(chat_id=self.chat_id, parse_mode='Markdown', text='[{0}](https://telegram.me/{1}/) *banned by* [{2}](https://telegram.me/{3}/)'.format(self.userresp,self.usernamerep, self.user, self.username), disable_web_page_preview=True)
 
 
     def unban(self):
@@ -48,7 +49,7 @@ class punish(main):
             list_ban_open.write(i+ '\n')
         list_ban_open.close()
 
-        self.bot.sendMessage(chat_id=self.chat_id, parse_mode='HTML', text='<b>{}</b> unbanned by <b>{}!</b>'.format(self.user,self.userresp))
+        self.bot.sendMessage(chat_id=self.chat_id, parse_mode='Markdown', text='[{0}](https://telegram.me/{1}/) *unbanned by* [{2}](https://telegram.me/{3}/)'.format(self.userresp,self.usernamerep, self.user, self.username), disable_web_page_preview=True)
         
     #funções warn requer ajustes
 
@@ -72,11 +73,11 @@ class punish(main):
             if c is None:
                 pass
             else:
-                self.bot.sendMessage(chat_id=self.chat_id, parse_mode='Markdown', text='`{0}` *banned:* reached the max number of warnings (`3/3`)'.format(self.userresp))
+                self.bot.sendMessage(chat_id=self.chat_id, parse_mode='Markdown', text='`[{0}](https://telegram.me/{1}/)` *banned:* reached the max number of warnings (`3/3`)'.format(self.userresp, self.usernamerep), disable_web_page_preview=True)
             warnlist.close()
             return
         cont = file_read.count(str(self.user_id))
-        self.bot.sendMessage(chat_id=self.chat_id, parse_mode='Markdown', text='`{0}` *has been warned* (`{1}`/*3*)'.format(self.userresp, cont), reply_markup=self.keyboard_warn())
+        self.bot.sendMessage(chat_id=self.chat_id, parse_mode='Markdown', text='[{0}](https://telegram.me/{1}/) *has been warned* (`{2}`/*3*)'.format(self.userresp, self.usernamerep,cont), reply_markup=self.keyboard_warn(), disable_web_page_preview=True)
 
 
     def unwarn(self, **keyword):

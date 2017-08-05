@@ -44,14 +44,14 @@ class command(main):
 
         if len(motivo) == 1:
             motivo.append('')
-            msgafk = '<b>Usuário {0} está afk!</b>\n<b>Razão</b>: Não especificado.'.format(self.user)
+            msgafk = '*Usuário:* [{0}](https://telegram.me/{1}/) está afk!*\nRazão*: Não especificado.'.format(self.user, self.username)
             afk_open.write(self.user+'\n')
 
         else:
-            msgafk = '<b>Usuário {0} está afk!</b>\n<b>Razão</b>: {1}'.format(self.user,motivo[1])
+            msgafk = '*Usuário:* [{0}](https://telegram.me/{1}/) *está afk!\nRazão*: {2}'.format(self.user,self.username,motivo[1])
             afk_open.write(self.user+'\n')
         afk_open.close()
-        self.bot.sendMessage(chat_id=self.chat_id,parse_mode='HTML', text=msgafk)
+        self.bot.sendMessage(chat_id=self.chat_id,parse_mode='Markdown', text=msgafk, disable_web_page_preview=True)
 
 
     def afklist(self): 
@@ -71,30 +71,40 @@ class command(main):
         for i in lista:
             write_afk_list.write(i)
 
-        self.bot.sendMessage(chat_id=self.chat_id, parse_mode='HTML', text='<b>Usuário {} está de volta!</b>'.format(self.user))
+        self.bot.sendMessage(chat_id=self.chat_id, parse_mode='Markdown', text='*Usuário* [{0}](https://telegram.me/{1}/) *está de volta!*'.format(self.user, self.username), disable_web_page_preview=True)
     
     def clearlists(self, clear):
-    
-        if 'blacklist' in clear:
-            with open('list_ban.txt', 'w') as limparlista:
-                limparlista.write('')
-                return '<b>Blacklist clear!</b>'
-    
-        if 'afklist' in clear:
-            with open('afk.txt', 'w') as limparlista:
-                limparlista.write('')
-                return '<b>Afklist clear!</b>'
-    
-        if 'warn' in clear:
-            with open('warn.txt', 'w') as limparlista:
-                limparlista.write('')
-                return '<b>warn clear!</b>'
-    
-        if 'all' in clear:
-            with open('list_ban.txt', 'w') as limparlista, open('afk.txt', 'w') as limparlista, open ('warn.txt', 'w') as limparlista:
-                limparlista.write('')
-                return '<b>All clear!</b>'
-        return '<b>Comando Invalido, falta de parâmetro.\n Tente:</b> /clear blacklist afklist...'
+        clear_dict = {'afklist' : 'afk.txt',
+                      'blacklist' : 'list_ban.txt',
+                      'warn' : 'warn.txt'
+        }
+
+        if len(clear) > 2:
+            for k in clear_dict.keys():
+                with open(clear_dict[k], 'w') as limparlista:
+                    limparlista.write('')
+            return '<b>Selected Lists Clear.</b>' 
+        else:
+            if 'blacklist' in clear:
+                with open('list_ban.txt', 'w') as limparlista:
+                    limparlista.write('')
+                    return '<b>Blacklist clear!</b>'
+        
+            if 'afklist' in clear:
+                with open('afk.txt', 'w') as limparlista:
+                    limparlista.write('')
+                    return '<b>Afklist clear!</b>'
+        
+            if 'warn' in clear:
+                with open('warn.txt', 'w') as limparlista:
+                    limparlista.write('')
+                    return '<b>warn clear!</b>'
+        
+            if 'all' in clear:
+                with open('list_ban.txt', 'w') as limparlista, open('afk.txt', 'w') as limparlista, open ('warn.txt', 'w') as limparlista:
+                    limparlista.write('')
+                    return '<b>All clear!</b>'
+            return '<b>Comando Invalido, falta de parâmetro.\n Tente:</b> /clear blacklist afklist...'
 
 
     def blacklist(self):
@@ -118,5 +128,19 @@ class command(main):
     
     def unpin(self):
         self.bot.unpinChatMessage(chat_id=self.chat_id)
+    
+    def promote_demote(self, admin=True):
+        self.adminuser = self.msg['reply_to_message']['from']['first_name']
+        self.bot.promoteChatMember(chat_id=self.chat_id, user_id=self.msg['reply_to_message']['from']['id'],
+                                   can_change_info=admin, can_post_messages=None, 
+                                   can_edit_messages=None, can_delete_messages=admin, 
+                                   can_invite_users=admin, can_pin_messages=admin, 
+                                   can_promote_members=None, can_restrict_members=admin)
+    
+    def link(self):
+        return self.bot.exportChatInviteLink(self.chat_id)
+    
+    
+
 
   

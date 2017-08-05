@@ -8,7 +8,7 @@ from punishment import punish
 def control(msg):
     
     global bot
-
+    
     try:
         main_inst = main(bot, msg)
         command_inst = command(bot, msg)
@@ -36,8 +36,9 @@ def control(msg):
                 punish_inst.unban()
 
         if ctext.startswith('/clear'):
-            return_resul = command_inst.clearlists(text)
-            bot.sendMessage(chat_id=main_inst.chat_id, parse_mode='HTML', text=return_resul)
+             if main_inst.get_admin_list():
+                return_resul = command_inst.clearlists(text)
+                bot.sendMessage(chat_id=main_inst.chat_id, parse_mode='HTML', text=return_resul)
 
         if ctext.startswith('/afklist', 0, 8):
             if main_inst.get_admin_list():
@@ -63,7 +64,6 @@ def control(msg):
             command_inst.back()
 
         if ctext == '/afk':
-            print('aqui')
             command_inst.afk(text)
         
         if ctext == '/pin':
@@ -71,8 +71,24 @@ def control(msg):
         
         if ctext.startswith('/unpin'):
             command_inst.unpin()
-    except:
-        pass
+        
+        if ctext.startswith('/promote'):
+            if main_inst.get_admin_list():
+                command_inst.promote_demote()
+                bot.sendMessage(chat_id=main_inst.chat_id, text='{0} agora e admin.'.format(command_inst.adminuser))
+                
+        if ctext.startswith('/demote'):
+            if main_inst.get_admin_list():
+                command_inst.promote_demote(admin=False)
+                bot.sendMessage(chat_id=main_inst.chat_id, text='{0} não e mais admin.'.format(command_inst.adminuser))
+        
+        if ctext.startswith('/link'):
+            if main_inst.get_admin_list():
+                bot.sendMessage(chat_id=main_inst.chat_id,parse_mode='Markdown', text='[Division of intelligence | #PL ]({})'.format(command_inst.link()), disable_web_page_preview=True)
+        
+      
+    except:                                                                   
+       pass
 
         
 
@@ -80,7 +96,6 @@ def control(msg):
 bot = telepot.Bot('token')
 print('Listening...')
 bot.message_loop(control)
-
 
 while 1:
     pass

@@ -84,7 +84,7 @@ def control(msg):
         
         if ctext.startswith('/link'):
             if main_inst.get_admin_list():
-                bot.sendMessage(chat_id=main_inst.chat_id,parse_mode='Markdown', text='[Division of intelligence | #PL ]({})'.format(command_inst.link()), disable_web_page_preview=True)
+                bot.sendMessage(chat_id=main_inst.chat_id,parse_mode='Markdown', text='[link name]({})'.format(command_inst.link()), disable_web_page_preview=True)
         
       
     except:                                                                   

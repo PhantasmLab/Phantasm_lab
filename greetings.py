@@ -18,5 +18,5 @@ class greetings(main):
     def keyboard_welcome(self):
         
         return InlineKeyboardMarkup(inline_keyboard=[
-                            [InlineKeyboardButton(text="Leia as Regras", url='http://telegra.ph/Division-of-intelligence-08-05')]
+                            [InlineKeyboardButton(text="Leia as Regras", url='link')]
                     ])

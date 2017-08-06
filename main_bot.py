@@ -109,7 +109,7 @@ def control(msg):
         
 
 
-bot = telepot.Bot('413009639:AAHaPiC0aZxSlV9h85_JcJLvinzx40X28hU')
+bot = telepot.Bot('token')
 print('Listening...')
 MessageLoop(bot,control).run_as_thread()
 

@@ -1,15 +1,19 @@
 import telepot
 import time
+
 class main:
 
     def __init__(self, bot, msg):
             
             self.bot = bot
-            try:
+            if msg.get('data'):
+                self.query_id, self.from_id, self.query_data = telepot.glance(msg, flavor='callback_query')
+                self.chat_id = msg['message']['chat']['id']
+                self.chat_type = msg['message']['chat']['type']
+            else:
                 self.content_type, self.chat_type, self.chat_id = telepot.glance(msg)
-            except:
-                self.chat_id, self.chat_type = msg['message']['chat']['id'], msg['message']['chat']['type']
-                pass
+
+
             self.user = msg['from']['first_name']
             self.username = msg['from']['username']
             self.UserID = msg['from']['id']
@@ -17,13 +21,21 @@ class main:
             
         
     
-    def get_admin_list(self):
+    def get_admin_list(self, query=False):
         admin = self.bot.getChatAdministrators(self.chat_id)
         AdminID_list = [adminID['user']['id'] for adminID in admin]
         
         if self.UserID in AdminID_list:
             return True
+        
+        if query != False:
+            self.bot.answerCallbackQuery(callback_query_id=self.query_id, 
+                                         text='You are not allowed to use this button!',
+                                         show_alert=True,
+                                         cache_time=1)
+            return
         self.bot.sendMessage(chat_id=self.chat_id,parse_mode='HTML', text=('<b>VOCÊ NÃO TEM PERMISSÃO PARA USAR ESSE COMANDO!!</b>'))
+    
 
 
     
@@ -71,7 +83,10 @@ class command(main):
         for i in lista:
             write_afk_list.write(i)
 
-        self.bot.sendMessage(chat_id=self.chat_id, parse_mode='Markdown', text='*Usuário* [{0}](https://telegram.me/{1}/) *está de volta!*'.format(self.user, self.username), disable_web_page_preview=True)
+        self.bot.sendMessage(chat_id=self.chat_id, 
+                             parse_mode='Markdown', 
+                             text='*Usuário* [{0}](https://telegram.me/{1}/) *está de volta!*'.format(self.user, self.username), 
+                             disable_web_page_preview=True)
     
     def clearlists(self, clear):
         clear_dict = {'afklist' : 'afk.txt',
@@ -108,7 +123,6 @@ class command(main):
 
 
     def blacklist(self):
-        print('aqui')
         with open('list_ban.txt', 'r') as file:
             file_read = file.read()
             if  file_read == '':
@@ -118,13 +132,11 @@ class command(main):
 
     def rules(self):
         
-        with open('rules.txt', 'r') as file:
-            file_read = file.read()
-            self.bot.sendMessage(parse_mode='HTML',chat_id=self.chat_id,text=file_read)
+        self.bot.sendMessage(parse_mode='Markdown',chat_id=self.chat_id,text='http://telegra.ph/Division-of-intelligence-08-05')
 
     def pin(self):
-        self.message_id = self.msg['reply_to_message']['message_id']
-        self.bot.pinChatMessage(chat_id=self.chat_id, message_id=self.message_id)
+        message_id = self.msg['reply_to_message']['message_id']
+        self.bot.pinChatMessage(chat_id=self.chat_id, message_id=message_id)
     
     def unpin(self):
         self.bot.unpinChatMessage(chat_id=self.chat_id)
@@ -139,8 +151,26 @@ class command(main):
     
     def link(self):
         return self.bot.exportChatInviteLink(self.chat_id)
-    
-    
+
+    def rt(self, text=None):
+        userresp = self.msg['reply_to_message']['from']['first_name']
+        username = self.msg['reply_to_message']['from']['username']
+        idmsg = self.msg['reply_to_message']['message_id']
+        message = self.msg['reply_to_message']['text']
+        
+        if text is None:
+            self.bot.sendMessage(parse_mode='Markdown',
+                                 chat_id=self.chat_id,
+                                 text='🔊 [{0}](https://telegram.me/{1}/) __Concorda com__ [{2}](https://telegram.me/{3}/)!\n\n💬: *{4}*'.format(self.user,self.username, userresp, username, message), 
+                                 reply_to_message_id=idmsg, 
+                                 disable_web_page_preview=True)
+
+        else:
+            self.bot.sendMessage(parse_mode='Markdown',
+                                chat_id=self.chat_id,
+                                text='🔊 [{0}](https://telegram.me/{1}/) __Concorda com__ [{2}](https://telegram.me/{3}/)!\n\n💬: *{4}*\n\n🗯: __{5}__'.format(self.user,self.username, userresp, username, message, text), 
+                                reply_to_message_id=idmsg, 
+                                disable_web_page_preview=True)
 
 
   

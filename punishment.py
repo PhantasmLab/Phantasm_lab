@@ -15,10 +15,10 @@ class punish(main):
             self.usernamerep = self.msg['reply_to_message']['from']['username']
             self.user_id = self.msg['reply_to_message']['from']['id']
             self.message_id = self.msg['reply_to_message']['message_id']
-        
-        #add on list if user_reply is admin
-        admin = self.bot.getChatAdministrators(self.chat_id)
-        self.AdminID_list_reply = [adminID['user']['id'] for adminID in admin if self.user_id == adminID['user']['id']]
+
+            #add on list if user_reply is admin
+            admin = self.bot.getChatAdministrators(self.chat_id)
+            self.AdminID_list_reply = [adminID['user']['id'] for adminID in admin if self.user_id == adminID['user']['id']]
 
     def ban(self):
         #ban user
@@ -32,7 +32,10 @@ class punish(main):
             list_ban.write('<i>' + self.userresp + '<i>'+'\n')
 
 
-        self.bot.sendMessage(chat_id=self.chat_id, parse_mode='Markdown', text='[{0}](https://telegram.me/{1}/) *banned by* [{2}](https://telegram.me/{3}/)'.format(self.userresp,self.usernamerep, self.user, self.username), disable_web_page_preview=True)
+        self.bot.sendMessage(chat_id=self.chat_id, 
+                             parse_mode='Markdown', 
+                             text='*sudo rm -rf* [{0}](https://telegram.me/{1}/)'.format(self.userresp,self.usernamerep), 
+                             disable_web_page_preview=True)
 
 
     def unban(self):
@@ -49,7 +52,10 @@ class punish(main):
             list_ban_open.write(i+ '\n')
         list_ban_open.close()
 
-        self.bot.sendMessage(chat_id=self.chat_id, parse_mode='Markdown', text='[{0}](https://telegram.me/{1}/) *unbanned by* [{2}](https://telegram.me/{3}/)'.format(self.userresp,self.usernamerep, self.user, self.username), disable_web_page_preview=True)
+        self.bot.sendMessage(chat_id=self.chat_id, 
+                             parse_mode='Markdown', 
+                             text='[{0}](https://telegram.me/{1}/) *unbanned by* [{2}](https://telegram.me/{3}/)'.format(self.userresp,self.usernamerep, self.user, self.username), 
+                             disable_web_page_preview=True)
         
     #funções warn requer ajustes
 
@@ -73,11 +79,18 @@ class punish(main):
             if c is None:
                 pass
             else:
-                self.bot.sendMessage(chat_id=self.chat_id, parse_mode='Markdown', text='`[{0}](https://telegram.me/{1}/)` *banned:* reached the max number of warnings (`3/3`)'.format(self.userresp, self.usernamerep), disable_web_page_preview=True)
+                self.bot.sendMessage(chat_id=self.chat_id, 
+                                     parse_mode='Markdown', 
+                                     text='`[{0}](https://telegram.me/{1}/)` *banned:* reached the max number of warnings (`3/3`)'.format(self.userresp, self.usernamerep), 
+                                     disable_web_page_preview=True)
             warnlist.close()
             return
         cont = file_read.count(str(self.user_id))
-        self.bot.sendMessage(chat_id=self.chat_id, parse_mode='Markdown', text='[{0}](https://telegram.me/{1}/) *has been warned* (`{2}`/*3*)'.format(self.userresp, self.usernamerep,cont), reply_markup=self.keyboard_warn(), disable_web_page_preview=True)
+        self.bot.sendMessage(chat_id=self.chat_id, 
+                             parse_mode='Markdown', 
+                             text='[{0}](https://telegram.me/{1}/) *has been warned* (`{2}`/*3*)'.format(self.userresp, self.usernamerep,cont), 
+                             reply_markup=self.keyboard_warn(), 
+                             disable_web_page_preview=True)
 
 
     def unwarn(self, **keyword):
@@ -88,7 +101,8 @@ class punish(main):
 
         list_warn_open = open('warn.txt', 'w')
         if keyword.get('data', False):
-            userswarn.remove(keyword['data'])
+            if self.get_admin_list(query=True):
+                userswarn.remove(keyword['data'])
         else:
             userswarn.remove(str(self.user_id))
 

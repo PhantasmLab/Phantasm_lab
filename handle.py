@@ -1,5 +1,4 @@
 import telepot
-import time
 
 class main:
 
@@ -18,13 +17,13 @@ class main:
             self.username = msg['from']['username']
             self.UserID = msg['from']['id']
             self.msg = msg
-            
+            self.msg_id = msg['message_id']
         
     
     def get_admin_list(self, query=False):
         admin = self.bot.getChatAdministrators(self.chat_id)
         AdminID_list = [adminID['user']['id'] for adminID in admin]
-        
+
         if self.UserID in AdminID_list:
             return True
         
@@ -34,7 +33,21 @@ class main:
                                          show_alert=True,
                                          cache_time=1)
             return
-        self.bot.sendMessage(chat_id=self.chat_id,parse_mode='HTML', text=('<b>VOCÊ NÃO TEM PERMISSÃO PARA USAR ESSE COMANDO!!</b>'))
+        self.bot.sendMessage(chat_id=self.chat_id,
+                             parse_mode='HTML', 
+                             text='<b>YOU DO NOT HAVE PERMISSION TO USE THIS COMMAND!</b>')
+    
+    def get_creator(self):
+        creator = self.bot.getChatAdministrators(self.chat_id)
+        creator_id = [c_id['user']['id'] for c_id in creator if c_id['status'] == 'creator']
+        
+
+        if self.UserID in creator_id:
+            return True
+        self.bot.sendMessage(chat_id=self.chat_id,
+                             parse_mode='HTML', 
+                             text='<b>ONLY THE CREATOR CAN USE THIS COMMAND!</b>', 
+                             reply_to_message_id=self.msg_id)
     
 
 
@@ -43,36 +56,45 @@ class main:
 
 class command(main):
     
-    def afk(self, text_command):
-        motivo = text_command
+    def afk(self, ):
+        motivo = self.msg['text'][5:]
         afk_open = open('afk.txt', 'a')
 
         with open('afk.txt', 'r') as afk_open1:
                 reader = list(afk_open1.read().split('\n'))
                 if self.user in reader:
                     afk_open.close()
-                    self.bot.sendMessage(chat_id=self.chat_id, parse_mode='HTML', text='<b>Você Ja esta AFK!</b>')
+                    self.bot.sendMessage(chat_id=self.chat_id, 
+                                         parse_mode='HTML', 
+                                         text='<b>You are already AFK!</b>', 
+                                         reply_to_message_id=self.msg_id)
                     return
 
-        if len(motivo) == 1:
-            motivo.append('')
-            msgafk = '*Usuário:* [{0}](https://telegram.me/{1}/) está afk!*\nRazão*: Não especificado.'.format(self.user, self.username)
+        if len(motivo) == 0:
+            msgafk = '*User:* [{0}](https://telegram.me/{1}/) is afk!*\nReason*: Not specified.'.format(self.user, self.username)
             afk_open.write(self.user+'\n')
 
         else:
-            msgafk = '*Usuário:* [{0}](https://telegram.me/{1}/) *está afk!\nRazão*: {2}'.format(self.user,self.username,motivo[1])
+            msgafk = '*User:* [{0}](https://telegram.me/{1}/) *is afk!\nReason*: {2}'.format(self.user,self.username,motivo)
             afk_open.write(self.user+'\n')
         afk_open.close()
-        self.bot.sendMessage(chat_id=self.chat_id,parse_mode='Markdown', text=msgafk, disable_web_page_preview=True)
+        self.bot.sendMessage(chat_id=self.chat_id,
+                             parse_mode='Markdown', 
+                             text=msgafk, 
+                             disable_web_page_preview=True, 
+                             reply_to_message_id=self.msg_id)
 
 
     def afklist(self): 
         file = open('afk.txt', 'r')
         f = file.read()
         if list(f) == []:
-            self.bot.sendMessage(chat_id=self.chat_id,parse_mode='HTML', text='<b>Nenhum Usuário na lista!</b>')
+            self.bot.sendMessage(chat_id=self.chat_id,
+                                 parse_mode='HTML', 
+                                 text='<b>No Users in the list!</b>',
+                                 reply_to_message_id=self.msg_id)
             return       
-        self.bot.sendMessage(chat_id=self.chat_id,text=f)
+        self.bot.sendMessage(chat_id=self.chat_id,text=f, reply_to_message_id=self.msg_id)
 
     def back(self):
         afklist = open('afk.txt', 'r')
@@ -85,54 +107,71 @@ class command(main):
 
         self.bot.sendMessage(chat_id=self.chat_id, 
                              parse_mode='Markdown', 
-                             text='*Usuário* [{0}](https://telegram.me/{1}/) *está de volta!*'.format(self.user, self.username), 
-                             disable_web_page_preview=True)
+                             text='*User* [{0}](https://telegram.me/{1}/) *is back!*'.format(self.user, self.username), 
+                             disable_web_page_preview=True,
+                             reply_to_message_id=self.msg_id)
     
-    def clearlists(self, clear):
+    def clearlists(self):
         clear_dict = {'afklist' : 'afk.txt',
                       'blacklist' : 'list_ban.txt',
                       'warn' : 'warn.txt'
         }
+        clear = self.msg['text'].split(' ')
 
         if len(clear) > 2:
             for k in clear_dict.keys():
                 with open(clear_dict[k], 'w') as limparlista:
                     limparlista.write('')
-            return '<b>Selected Lists Clear.</b>' 
+            resp = '<b>Selected Lists Clear.</b>'
+            return  
         else:
             if 'blacklist' in clear:
                 with open('list_ban.txt', 'w') as limparlista:
                     limparlista.write('')
-                    return '<b>Blacklist clear!</b>'
+                resp = '<b>Blacklist clear!</b>' 
         
-            if 'afklist' in clear:
+            elif 'afklist' in clear:
                 with open('afk.txt', 'w') as limparlista:
                     limparlista.write('')
-                    return '<b>Afklist clear!</b>'
+                resp = '<b>Afklist clear!</b>' 
         
-            if 'warn' in clear:
+            elif 'warn' in clear:
                 with open('warn.txt', 'w') as limparlista:
                     limparlista.write('')
-                    return '<b>warn clear!</b>'
+                resp = '<b>warn clear!</b>' 
         
-            if 'all' in clear:
+            elif 'all' in clear:
                 with open('list_ban.txt', 'w') as limparlista, open('afk.txt', 'w') as limparlista, open ('warn.txt', 'w') as limparlista:
                     limparlista.write('')
-                    return '<b>All clear!</b>'
-            return '<b>Comando Invalido, falta de parâmetro.\n Tente:</b> /clear blacklist afklist...'
-
+                resp = '<b>All clear!</b>'
+            else: 
+                resp = '<b>Invalid Command, Requires argument.\n Try:</b> /clear blacklist afklist...'
+        
+        self.bot.sendMessage(chat_id=self.chat_id, 
+                        parse_mode='HTML', 
+                        text=resp,
+                        reply_to_message_id=self.msg_id)
 
     def blacklist(self):
         with open('list_ban.txt', 'r') as file:
             file_read = file.read()
             if  file_read == '':
-                self.bot.sendMessage(parse_mode='HTML',chat_id=self.chat_id,text='<b>Nenhum Usuário na lista!</b>')
+                self.bot.sendMessage(parse_mode='HTML',
+                                     chat_id=self.chat_id,
+                                     text='<b>No Users in the list!</b>',
+                                     reply_to_message_id=self.msg_id)
                 return
-            self.bot.sendMessage(parse_mode='HTML',chat_id=self.chat_id,text=file_read)
+            self.bot.sendMessage(parse_mode='HTML',
+                                 chat_id=self.chat_id,
+                                 text=file_read,
+                                 reply_to_message_id=self.msg_id)
 
     def rules(self):
         
-        self.bot.sendMessage(parse_mode='Markdown',chat_id=self.chat_id,text='http://telegra.ph/Division-of-intelligence-08-05')
+        self.bot.sendMessage(parse_mode='Markdown',
+                             chat_id=self.chat_id,
+                             text='[rules](http://telegra.ph/Division-of-intelligence-08-05)',
+                             reply_to_message_id=self.msg_id)
 
     def pin(self):
         message_id = self.msg['reply_to_message']['message_id']
@@ -142,15 +181,22 @@ class command(main):
         self.bot.unpinChatMessage(chat_id=self.chat_id)
     
     def promote_demote(self, admin=True):
-        self.adminuser = self.msg['reply_to_message']['from']['first_name']
-        self.bot.promoteChatMember(chat_id=self.chat_id, user_id=self.msg['reply_to_message']['from']['id'],
-                                   can_change_info=admin, can_post_messages=None, 
-                                   can_edit_messages=None, can_delete_messages=admin, 
-                                   can_invite_users=admin, can_pin_messages=admin, 
-                                   can_promote_members=None, can_restrict_members=admin)
-    
-    def link(self):
-        return self.bot.exportChatInviteLink(self.chat_id)
+        if self.get_creator():
+            adminuser = self.msg['reply_to_message']['from']['first_name']
+            self.bot.promoteChatMember(chat_id=self.chat_id, user_id=self.msg['reply_to_message']['from']['id'],
+                                       can_change_info=admin, can_post_messages=None, 
+                                       can_edit_messages=None, can_delete_messages=admin, 
+                                       can_invite_users=admin, can_pin_messages=admin, 
+                                       can_promote_members=None, can_restrict_members=admin)
+
+            if admin:
+                self.bot.sendMessage(chat_id=main_inst.chat_id, 
+                                    text='{0} becames a admin.'.format(adminuser),
+                                    reply_to_message_id=self.msg_id)
+            else:
+                self.bot.sendMessage(chat_id=main_inst.chat_id, 
+                                    text='{0} is not more admin.'.format(adminuser),
+                                    reply_to_message_id=self.msg_id)
 
     def rt(self, text=None):
         userresp = self.msg['reply_to_message']['from']['first_name']
@@ -161,16 +207,42 @@ class command(main):
         if text is None:
             self.bot.sendMessage(parse_mode='Markdown',
                                  chat_id=self.chat_id,
-                                 text='🔊 [{0}](https://telegram.me/{1}/) __Concorda com__ [{2}](https://telegram.me/{3}/)!\n\n💬: *{4}*'.format(self.user,self.username, userresp, username, message), 
+                                 text='🔊 [{0}](https://telegram.me/{1}/) __agree with__ [{2}](https://telegram.me/{3}/)!\n\n💬: *{4}*'.format(self.user,self.username, userresp, username, message), 
                                  reply_to_message_id=idmsg, 
                                  disable_web_page_preview=True)
 
         else:
             self.bot.sendMessage(parse_mode='Markdown',
                                 chat_id=self.chat_id,
-                                text='🔊 [{0}](https://telegram.me/{1}/) __Concorda com__ [{2}](https://telegram.me/{3}/)!\n\n💬: *{4}*\n\n🗯: __{5}__'.format(self.user,self.username, userresp, username, message, text), 
+                                text='🔊 [{0}](https://telegram.me/{1}/) __agree with__ [{2}](https://telegram.me/{3}/)!\n\n💬: *{4}*\n\n🗯: __{5}__'.format(self.user,self.username, userresp, username, message, text), 
                                 reply_to_message_id=idmsg, 
                                 disable_web_page_preview=True)
-
-
-  
+    
+    def admin(self):
+        admin = ['@' + adminuser['user']['username'] + '\n' for adminuser in self.bot.getChatAdministrators(self.chat_id)]
+        self.bot.sendMessage(chat_id=self.chat_id, 
+                             text=''.join(admin),
+                             reply_to_message_id=self.msg_id)
+    
+    def repotadmin(self):
+        if self.msg.get('reply_to_message'):
+            group = self.msg['chat']['title']
+            msg_re = self.msg['reply_to_message']['text']
+            userresp = self.msg['reply_to_message']['from']['first_name']
+            username = self.msg['reply_to_message']['from']['username']
+            user_id = self.msg['reply_to_message']['from']['id']
+            id_msg = self.msg['reply_to_message']['message_id']
+            msg = '*User*: [{0}](https://telegram.me/{1}/) *reported this message:*\n\n`{2}`\n\n*User Reported:* [{3}](https://telegram.me/{4}/)\n*Id*: {5}\n*Message Id*: {6}\n*From*: {7}'.format(self.user,self.username,msg_re,  username, username, user_id,id_msg,group)
+            self.bot.sendMessage(chat_id='-1001099322003',
+                                 parse_mode='Markdown',
+                                 text=msg,
+                                 disable_web_page_preview=True)
+            self.bot.sendMessage(chat_id=self.chat_id,
+                                 parse_mode='Markdown',
+                                 text='*User reported to Admin.*',
+                                 disable_web_page_preview=True)
+        else:
+            self.bot.sendMessage(chat_id=self.chat_id, 
+                                 text='You need reply this message.',
+                                 reply_to_message_id=self.msg_id)
+    

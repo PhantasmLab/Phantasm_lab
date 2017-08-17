@@ -52,7 +52,7 @@ def control(msg):
             }
 
 
-            if 'new_chat_member' in msg:
+            if msg.get('new_chat_member'):
                 greetings_inst.welcome()
 
             if admin_commands.get(ctext):

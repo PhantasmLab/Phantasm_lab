@@ -191,7 +191,7 @@ class command(main):
     def rules(self):		
         self.bot.sendMessage(parse_mode='HTML',
                              chat_id=self.chat_id,
-                             text='<a href="http://telegra.ph/Division-of-intelligence-08-05">rules</a>',
+                             text='<a href="link">rules</a>',
                              reply_to_message_id=self.msg_id)
 
 

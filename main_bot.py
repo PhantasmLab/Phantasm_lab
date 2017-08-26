@@ -1,11 +1,17 @@
-from telepot.loop import MessageLoop
-import telepot
-from handle import *
-from punishment import punish
-from greetings import greetings
-from time import sleep
 from sys import argv
+from time import sleep
 
+import telepot
+from telepot.loop import MessageLoop
+
+from greetings import greetings
+from handle import main, command
+from punishment import punish
+from bot_decorators import check
+
+token = argv[1]
+
+@check
 def control(msg):
 
     try:
@@ -13,66 +19,62 @@ def control(msg):
         command_inst = command(bot, msg)
         greetings_inst = greetings(bot,msg)
         punish_inst = punish(bot, msg)
+        
         if msg.get('data'):
-            text = 'None'
-            ctext = 'None'
-            punish_inst = punish(bot, msg)
+            text = ''
+            ctext = ''
             punish_inst.unwarn(data=main_inst.query_data)
-
-        else:
+        elif msg.get('text'):
             text = msg['text'].split(' ')
             ctext = text[0].lower()
-
         if main_inst.chat_type == 'private':
             pass
         else:
             
             admin_commands = {
-                          
-                            '/ban':       punish_inst.ban,
-                            '/unban':     punish_inst.unban,
-                            '/warn':      punish_inst.warn,
-                            'unwarn':     punish_inst.unwarn,
-                            '/blacklist': command_inst.blacklist,
-                            '/afklist':   command_inst.afklist,
-                            '/clear':     command_inst.clearlists,
-                            '/promote':   command_inst.promote_demote,
-                            '/demote':    command_inst.promote_demote,
-                            '/pin':       command_inst.pin,
-                            '/unpin':     command_inst.pin
+                    '/ban':       punish_inst.ban,
+                    '/unban':     punish_inst.unban,
+                    '/warn':      punish_inst.warn,
+                    '/unwarn':     punish_inst.unwarn,
+                    '/blacklist': command_inst.blacklist,
+                    '/afklist':   command_inst.afklist,
+                    '/clear':     command_inst.clearlists,
+                    '/promote':   command_inst.promote_demote,
+                    '/demote':    command_inst.promote_demote,
+                    '/pin':       command_inst.pin,
+                    '/unpin':     command_inst.unpin
             }
         
             user_command = {
-
-                            '/afk':       command_inst.afk,
-                            '/back':      command_inst.back,
-                            '/rules':     command_inst.rules,
-                            '/admins':    command_inst.admin,
-                            '@admin':     command_inst.repotadmin
+                    '/afk':       command_inst.afk,
+                    '/back':      command_inst.back,
+                    '/rules':     command_inst.rules,
+                    '/admins':    command_inst.admin,
+                    '@admin':     command_inst.repotadmin
             }
 
 
             if msg.get('new_chat_member'):
                 greetings_inst.welcome()
 
-            if admin_commands.get(ctext):
-                if main_inst.get_admin_list():
-                    if ctext.startswith('/warn'):
-                        admin_commands[ctext](text)
-
-                    elif ctext.startswith('/afklist', 0, 8):
-                        admin_commands[ctext]()
-
-                    elif ctext.startswith('/demote'):
-                        admin_commands[ctext](admin=False)
-
-                    else:
-                        admin_commands[ctext]()
             elif user_command.get(ctext):
                 user_command[ctext]()
 
-  
-            if ctext.lower().startswith('rt',0,2):
+            elif admin_commands.get(ctext):
+                
+                if ctext.startswith('/warn'):
+                    admin_commands[ctext](text)
+
+                elif ctext.startswith('/afklist', 0, 8):
+                    admin_commands[ctext]()
+
+                elif ctext.startswith('/demote'):
+                    admin_commands[ctext](admin=False)
+                else:
+                    admin_commands[ctext]()
+                        
+
+            elif ctext.startswith('rt',0,2):
                 if msg.get('reply_to_message', False):
                     if (text[0].lower() == 'rt' and len(text) == 1) or (text[0].lower() == 'rtzao' and len(text) == 1):
                         command_inst.rt()
@@ -88,15 +90,17 @@ def control(msg):
                         elif 'rt' == text[0:2]: 
                             text = text.strip('rtzao')
                             command_inst.rt(text)
+            
+    
               
     except:                                                                   
         pass
-     
+   
 
-bot = telepot.Bot(argv[1])
-print('Listening...')
-MessageLoop(bot, control).run_as_thread()
+bot = telepot.Bot(token)
 
-
-while 1:
-    sleep(100)
+if __name__ == '__main__':
+    print('Listening...')
+    MessageLoop(bot, control).run_as_thread()
+    while 1:
+        sleep(100)

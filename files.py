@@ -66,7 +66,7 @@ class data:
             try:
                 with open(cls.path.__str__() + '/{}.txt'.format(which), 'r') as file:
                     return file.read()
-            except:
+            except FileNotFoundError:
                 mknod(cls.path.__str__() + '/{}.txt'.format(which))
             else:
                 break

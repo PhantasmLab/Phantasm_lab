@@ -1,7 +1,9 @@
 import telepot
+from pathlib import Path
+from os import mkdir
 
 from bot_decorators import *
-
+from files import data
 
 class main:
 
@@ -27,8 +29,8 @@ class main:
             self.msg = msg
             self.UserID = msg['from']['id']
             self.user = msg['from']['first_name']
-            
-            
+            data(self.chat_id)
+            data.create_path_and_check()
             
         
     
@@ -72,30 +74,26 @@ class main:
 
 class command(main):
     
-    def afk(self, ):
+    def afk(self):
+        
         motivo = self.msg['text'][5:]
-        afk_open = open('afk.txt', 'a')
 
-        with open('afk.txt', 'r') as afk_open1:
-                reader = list(afk_open1.read().split('\n'))
-                if self.user in reader:
-                    afk_open.close()
-                    self.bot.sendMessage(chat_id=self.chat_id, 
-                                         parse_mode='HTML', 
-                                         text='<b>You are already AFK!</b>', 
-                                         reply_to_message_id=self.msg_id)
-                    return
+        reader = data.afk(user=self.user,listafk=True)
+        
+        if reader:
+            self.bot.sendMessage(chat_id=self.chat_id, 
+                                 parse_mode='HTML', 
+                                 text='<b>You are already AFK!</b>', 
+                                 reply_to_message_id=self.msg_id)
+            return
 
         if len(motivo) == 0:
             msgafk = '<b>User:</b> <a href="https://telegram.me/{1}/">{0}</a> is afk!<b>\nReason</b>: Not specified.'.format(self.user, self.username)
-            afk_open.write(self.user+'\n')
+            data.afk(self.user)
 
         else:
-            msgafk = '<b>User:</b> <a href="https://telegram.me/{1}/">{0}</a> <b>is afk!\nReason</b>: {2}'.format(self.user,
-                                                                                             self.username,
-                                                                                             motivo)
-            afk_open.write(self.user+'\n')
-        afk_open.close()
+            msgafk = '<b>User:</b> <a href="https://telegram.me/{1}/">{0}</a> <b>is afk!\nReason</b>: {2}'.format(self.user,self.username,motivo)
+            data.afk(self.user)
         self.bot.sendMessage(chat_id=self.chat_id,
                              parse_mode='HTML', 
                              text=msgafk, 
@@ -104,25 +102,17 @@ class command(main):
 
     @admin
     def afklist(self): 
-        file = open('afk.txt', 'r')
-        f = file.read()
-        if list(f) == []:
+        resul = data.afklist_and_blacklist('afk')
+        if resul == '':
             self.bot.sendMessage(chat_id=self.chat_id,
                                  parse_mode='HTML', 
                                  text='<b>No Users in the list!</b>',
                                  reply_to_message_id=self.msg_id)
             return       
-        self.bot.sendMessage(chat_id=self.chat_id,text=f, reply_to_message_id=self.msg_id)
+        self.bot.sendMessage(chat_id=self.chat_id,text=resul, reply_to_message_id=self.msg_id)
 
     def back(self):
-        afklist = open('afk.txt', 'r')
-        lista = afklist.read().split('\n')
-        afklist.close()
-        lista.remove(self.user)
-        write_afk_list = open('afk.txt', 'w')
-        for i in lista:
-            write_afk_list.write(i)
-
+        data.unban_and_unwarn_back(self.user, 'afk')
         self.bot.sendMessage(chat_id=self.chat_id, 
                              parse_mode='HTML', 
                              text='<b>User</b> <a href="https://telegram.me/{1}/">{0}</a> <b>is back!</b>'.format(self.user, self.username), 
@@ -130,43 +120,9 @@ class command(main):
                              reply_to_message_id=self.msg_id)
 
     @admin
-    @log
     def clearlists(self):
-        clear_dict = {'afklist' : 'afk.txt',
-                      'blacklist' : 'list_ban.txt',
-                      'warn' : 'warn.txt'
-        }
         clear = self.msg['text'].split(' ')
-
-        if len(clear) > 2:
-            for k in clear_dict.keys():
-                with open(clear_dict[k], 'w') as limparlista:
-                    limparlista.write('')
-            resp = '<b>Selected Lists Clear.</b>'
-            return  
-        else:
-            if 'blacklist' in clear:
-                with open('list_ban.txt', 'w') as limparlista:
-                    limparlista.write('')
-                resp = '<b>Blacklist clear!</b>' 
-        
-            elif 'afklist' in clear:
-                with open('afk.txt', 'w') as limparlista:
-                    limparlista.write('')
-                resp = '<b>Afklist clear!</b>' 
-        
-            elif 'warn' in clear:
-                with open('warn.txt', 'w') as limparlista:
-                    limparlista.write('')
-                resp = '<b>warn clear!</b>' 
-        
-            elif 'all' in clear:
-                with open('list_ban.txt', 'w') as limparlista, open('afk.txt', 'w') as limparlista, open ('warn.txt', 'w') as limparlista:
-                    limparlista.write('')
-                resp = '<b>All clear!</b>'
-            else: 
-                resp = '<b>Invalid Command, Requires argument.\nTry:</b> /clear blacklist afklist...'
-        
+        resp = data.clearlist_x(clear)
         self.bot.sendMessage(chat_id=self.chat_id, 
                              parse_mode='HTML', 
                              text=resp,
@@ -174,42 +130,38 @@ class command(main):
 
     @admin
     def blacklist(self):
-        with open('list_ban.txt', 'r') as file:
-            file_read = file.read()
-            if  file_read == '':
-                self.bot.sendMessage(parse_mode='HTML',
-                                     chat_id=self.chat_id,
-                                     text='<b>No Users in the list!</b>',
-                                     reply_to_message_id=self.msg_id)
-                return
-            self.bot.sendMessage(parse_mode='Markdown',
+        resul = data.afklist_and_blacklist('blacklist')
+        if  resul == '':
+            self.bot.sendMessage(parse_mode='HTML',
                                  chat_id=self.chat_id,
-                                 text=file_read,
+                                 text='<b>No Users in the list!</b>',
                                  reply_to_message_id=self.msg_id)
+            return
+        self.bot.sendMessage(parse_mode='Markdown',
+                             chat_id=self.chat_id,
+                             text=resul,
+                             reply_to_message_id=self.msg_id)
 
 
     def rules(self):		
         self.bot.sendMessage(parse_mode='HTML',
                              chat_id=self.chat_id,
-                             text='<a href="link">rules</a>',
+                             text='<a href="http://telegra.ph/Division-of-intelligence-08-05">rules</a>',
                              reply_to_message_id=self.msg_id)
 
 
     @admin
-    @log
     def pin(self):
         message_id = self.msg['reply_to_message']['message_id']
         self.bot.pinChatMessage(chat_id=self.chat_id, message_id=message_id)
 
 
     @admin
-    @log
     def unpin(self):
         self.bot.unpinChatMessage(chat_id=self.chat_id)
     
 
     @admin
-    @log
     def promote_demote(self, admin=True):
         if self.get_creator():
             adminuser = self.msg['reply_to_message']['from']['first_name']

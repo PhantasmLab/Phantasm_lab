@@ -9,12 +9,12 @@ from handle import main, command
 from punishment import punish
 from bot_decorators import check
 
-token = argv[1]
+#token = argv[1]
 
 @check
 def control(msg):
 
-    try:
+    #try:
         main_inst = main(bot, msg)
         command_inst = command(bot, msg)
         greetings_inst = greetings(bot,msg)
@@ -91,13 +91,15 @@ def control(msg):
                             text = text.strip('rtzao')
                             command_inst.rt(text)
             
-    
+
+            elif ctext == 'test':
+                print(msg)
               
-    except:                                                                   
-        pass
+    #except:                                                                   
+      #  pass
    
 
-bot = telepot.Bot(token)
+bot = telepot.Bot('384520467:AAERMol7l3sJ9WiwkPMpUe-dztbGAxTxtZ8')
 
 if __name__ == '__main__':
     print('Listening...')

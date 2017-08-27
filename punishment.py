@@ -1,5 +1,6 @@
 from telepot.namedtuple import InlineKeyboardButton, InlineKeyboardMarkup
 
+from files import data
 from bot_decorators import *
 from handle import main
 
@@ -14,22 +15,18 @@ class punish(main):
                 self.userresp = self.msg['reply_to_message']['from']['first_name']               
                 self.user_id = str(self.msg['reply_to_message']['from']['id'])
                 self.message_id = self.msg['reply_to_message']['message_id']
-
                 if msg['reply_to_message'].get('username'):
                     self.usernamerep = self.msg['reply_to_message']['from']['username']
                 else:
                     self.usernamerep = 'No username'
-        else:
-            self.userresp = None
-            self.user_id = None
-            self.message_id = None
+    
 
         
 
     @admin			
-    @log
     def ban(self, warn=False):
-        #ban user
+        data.create_path_and_check()
+
         if self.user_id in str(self.get_admin_list(user_reply=True)):
             self.bot.sendMessage(chat_id=self.chat_id, 
                                 parse_mode='HTML', 
@@ -47,8 +44,7 @@ class punish(main):
                 list_ban.write('<i>' + self.userresp + '<i>'+'\n')
             return
         #add list
-        with open('list_ban.txt', 'a') as list_ban:
-            list_ban.write(self.userresp+'\n')
+        data.ban_and_warn_write(self.userresp, 'blacklist')
 
         
         self.bot.sendMessage(chat_id=self.chat_id, 
@@ -61,77 +57,54 @@ class punish(main):
         d.close()
 
     @admin
-    @log
     def unban(self):
-        list_ban_open = open('list_ban.txt', 'r')
-        usersban = list_ban_open.read().split('\n')
-        list_ban_open.close()
-
-        if usersban != '':
-            self.bot.unbanChatMember(self.chat_id, self.user_id)
-            self.bot.sendMessage(chat_id=self.chat_id, 
-                                parse_mode='HTML', 
-                                text='<a href="https://telegram.me/{1}/">{0}</a> <b>unbanned by</b> <a href="https://telegram.me/{3}/">{2}</a>'.format(self.userresp,self.usernamerep, 
+        self.bot.unbanChatMember(self.chat_id, self.user_id)
+        self.bot.sendMessage(chat_id=self.chat_id, 
+                             parse_mode='HTML', 
+                             text='<a href="https://telegram.me/{1}/">{0}</a> <b>unbanned by</b> <a href="https://telegram.me/{3}/">{2}</a>'.format(self.userresp,self.usernamerep, 
                                                                                                                             self.user, self.username), 
-                                disable_web_page_preview=True,
-                                reply_to_message_id=self.msg_id)
-                                
-            list_ban_open = open('list_ban.txt', 'w')
-            usersban.remove(self.userresp)
-            for i in usersban:
-                list_ban_open.write(i+ '\n')
-            list_ban_open.close()
-        
+                             disable_web_page_preview=True,
+                             reply_to_message_id=self.msg_id)                         
+        data.unban_and_unwarn_back(self.user_id, 'blacklist')
+
+
     @admin	
-    @log
     def warn(self, quanti):
-        #add user's is
+        data.create_path_and_check()
+
         if len(quanti) > 1:
             quanti[1] = int(quanti[1])
-            with open('warn.txt', 'a') as warnlist: 
-                for warn_qt in range(quanti[1]):
-                    warnlist.write(self.user_id + '\n')
+            for warn_qt in range(quanti[1]):
+                data.ban_and_warn_write(self.user_id, 'warn')
         else:
-            with open('warn.txt', 'a') as warnlist: 
-                warnlist.write(self.user_id + '\n')
+            data.ban_and_warn_write(self.user_id, 'warn')
         
-        warnlist = open('warn.txt', 'r')
-        file_read = warnlist.read().split('\n')
-        warnlist.close()
-
-        if file_read.count(self.user_id) >= 3:
+        if data.counter_warnings(self.user_id) >= 3:
+            print(data.counter_warnings(self.user_id))
             retur = self.ban(warn=True)
             return
         
-        cont = file_read.count(self.user_id)
+        cont = data.counter_warnings(self.user_id)
+        
         self.bot.sendMessage(chat_id=self.chat_id, 
                              parse_mode='HTML', 
                              text='<a href="https://telegram.me/{1}/">{0}</a> <b>has been warned</b> (<i>{2}</i>/<b>3</b>)'.format(self.userresp, self.usernamerep,cont), 
                              reply_markup=self.keyboard_warn(), 
                              disable_web_page_preview=True,
                              reply_to_message_id=self.msg_id)
-    @admin						 
-    @log
-    def unwarn(self, **keyword):
-        
-        list_warn_open = open('warn.txt', 'r')
-        userswarn = list_warn_open.read().split('\n')
-        list_warn_open.close()
 
-        list_warn_open = open('warn.txt', 'w')
+
+    @admin						 
+    def unwarn(self, **keyword):
+        print('unwarn')
         if keyword.get('data', False):
                 self.bot.answerCallbackQuery(callback_query_id=self.query_id, 
                                              text='Warn has been removed!',
                                              show_alert=False,
                                              cache_time=1)
-                userswarn.remove(keyword['data'])
-
+                data.unban_and_unwarn_back(keyword['data'], 'warn')
         else:
-            userswarn.remove(self.user_id)
-
-        for i in userswarn:
-            list_warn_open.write(i+ '\n')
-        list_warn_open.close()
+            data.unban_and_unwarn_back(self.user_id, 'warn')
 
 
     def keyboard_warn(self):

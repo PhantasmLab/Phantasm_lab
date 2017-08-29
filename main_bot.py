@@ -35,7 +35,7 @@ def control(msg):
                     '/ban':       punish_inst.ban,
                     '/unban':     punish_inst.unban,
                     '/warn':      punish_inst.warn,
-                    '/unwarn':     punish_inst.unwarn,
+                    '/unwarn':    punish_inst.unwarn,
                     '/blacklist': command_inst.blacklist,
                     '/afklist':   command_inst.afklist,
                     '/clear':     command_inst.clearlists,

@@ -77,32 +77,24 @@ class command(main):
     def afk(self):
         
         motivo = self.msg['text'][5:]
+        if data.afk(self.user):
+            if len(motivo) == 0:
+                msgafk = '<b>User:</b> <a href="https://telegram.me/{1}/">{0}</a> is now afk!<b>\nReason</b>: Not specified.'.format(self.user, self.username)
+                data.afk(self.user)
 
-        reader = data.afk(user=self.user,listafk=True)
-        
-        if reader:
-            self.bot.sendMessage(chat_id=self.chat_id, 
-                                 parse_mode='HTML', 
-                                 text='<b>You are already AFK!</b>', 
-                                 reply_to_message_id=self.msg_id)
-            return
+            else:
+                msgafk = '<b>User:</b> <a href="https://telegram.me/{1}/">{0}</a> <b>is now afk!\nReason</b>: {2}'.format(self.user,self.username,motivo)
+                data.afk(self.user)
+            self.bot.sendMessage(chat_id=self.chat_id,
+                                parse_mode='HTML', 
+                                text=msgafk, 
+                                disable_web_page_preview=True, 
+                                reply_to_message_id=self.msg_id)
 
-        if len(motivo) == 0:
-            msgafk = '<b>User:</b> <a href="https://telegram.me/{1}/">{0}</a> is afk!<b>\nReason</b>: Not specified.'.format(self.user, self.username)
-            data.afk(self.user)
-
-        else:
-            msgafk = '<b>User:</b> <a href="https://telegram.me/{1}/">{0}</a> <b>is afk!\nReason</b>: {2}'.format(self.user,self.username,motivo)
-            data.afk(self.user)
-        self.bot.sendMessage(chat_id=self.chat_id,
-                             parse_mode='HTML', 
-                             text=msgafk, 
-                             disable_web_page_preview=True, 
-                             reply_to_message_id=self.msg_id)
 
     @admin
     def afklist(self): 
-        resul = data.afklist_and_blacklist('afk')
+        resul = data.afklist_and_blacklist('afk.csv')
         if resul == '':
             self.bot.sendMessage(chat_id=self.chat_id,
                                  parse_mode='HTML', 
@@ -111,6 +103,7 @@ class command(main):
             return       
         self.bot.sendMessage(chat_id=self.chat_id,text=resul, reply_to_message_id=self.msg_id)
 
+
     def back(self):
         data.unban_and_unwarn_back(self.user, 'afk')
         self.bot.sendMessage(chat_id=self.chat_id, 
@@ -118,6 +111,7 @@ class command(main):
                              text='<b>User</b> <a href="https://telegram.me/{1}/">{0}</a> <b>is back!</b>'.format(self.user, self.username), 
                              disable_web_page_preview=True,
                              reply_to_message_id=self.msg_id)
+
 
     @admin
     def clearlists(self):
@@ -128,9 +122,10 @@ class command(main):
                              text=resp,
                              reply_to_message_id=self.msg_id)
 
+
     @admin
     def blacklist(self):
-        resul = data.afklist_and_blacklist('blacklist')
+        resul = data.afklist_and_blacklist('blacklist.txt')
         if  resul == '':
             self.bot.sendMessage(parse_mode='HTML',
                                  chat_id=self.chat_id,
@@ -146,7 +141,7 @@ class command(main):
     def rules(self):		
         self.bot.sendMessage(parse_mode='HTML',
                              chat_id=self.chat_id,
-                             text='<a href="http://telegra.ph/Division-of-intelligence-08-05">rules</a>',
+                             text='<a href="LINK HERE">rules</a>',
                              reply_to_message_id=self.msg_id)
 
 
@@ -182,54 +177,66 @@ class command(main):
 
 
     def rt(self, text=None):
-        userresp = self.msg['reply_to_message']['from']['first_name']
-        username = self.msg['reply_to_message']['from']['username']
         idmsg = self.msg['reply_to_message']['message_id']
         message = self.msg['reply_to_message']['text']
+        userresp = self.msg['reply_to_message']['from']['first_name']
+        username = self.msg['reply_to_message']['from']['username']
         
         if text is None:
             self.bot.sendMessage(parse_mode='HTML',
                                  chat_id=self.chat_id,
-                                 text='🔊 <a href="https://telegram.me/{1}/">{0}</a> __agree with__ <a href="https://telegram.me/{3}/">{2}</a>!\n\n💬: <b>{4}</b>'.format(self.user,self.username, 
-                                                                                                                                             userresp,username,message), 
+                                 text='🔊 <a href="https://telegram.me/{1}/">{0}</a>' 
+                                 'agree with <a href="https://telegram.me/{3}/">{2}</a>!\n\n💬: <b>{4}</b>'.format(
+                                 self.user,
+                                 self.username,
+                                 userresp,
+                                 username,
+                                 message), 
                                  reply_to_message_id=idmsg, 
                                  disable_web_page_preview=True)
 
         else:
             self.bot.sendMessage(parse_mode='HTML',
                                  chat_id=self.chat_id,
-                                 text='🔊 <a href="https://telegram.me/{1}/">{0}</a> __agree with__ <a href="https://telegram.me/{3}/">{2}</a>!\n\n💬: <b>{4}</b>\n\n🗯: __{5}__'.format(self.user,self.username, 
-                                                                                                                                                          userresp,username, 
-                                                                                                                                                          message,text), 
-                                reply_to_message_id=idmsg, 
-                                disable_web_page_preview=True)
+                                 text='🔊 <a href="https://telegram.me/{1}/">{0}</a> agree with' 
+                                 '<a href="https://telegram.me/{3}/">{2}</a>!\n\n💬: <b>{4}</b>\n\n🗯: {5}'.format(
+                                 self.user,
+                                 self.username,
+                                 userresp,
+                                 username,
+                                 message,
+                                 text), 
+                                 reply_to_message_id=idmsg, 
+                                 disable_web_page_preview=True)
     
 
     def admin(self):
         admin = ['├ '+adminuser['user']['first_name'] + '\n' for adminuser in self.bot.getChatAdministrators(self.chat_id)]
         admins = ''.join(admin[:-1])
         msg = '👤 <b>Creator</b>:\n└{0}\nAdmins:\n{1}'.format(admin[-1][1:], admins)
+        
         self.bot.sendMessage(chat_id=self.chat_id,
                              parse_mode='HTML',
                              text=msg,
                              reply_to_message_id=self.msg_id)
     
-    
+
     def repotadmin(self):
         if self.msg.get('reply_to_message'):
-            group = self.msg['chat']['title']
-            msg_re = self.msg['reply_to_message']['text']
-            userresp = self.msg['reply_to_message']['from']['first_name']
-            username = self.msg['reply_to_message']['from']['username']
-            user_id = self.msg['reply_to_message']['from']['id']
-            id_msg = self.msg['reply_to_message']['message_id']
-            msg = '<b>User</b>: <a href="https://telegram.me/{1}/">{0}</a> <b>reported this message:</b>\n\n<i>{2}</i>\n\n<b>User Reported:</b> <a href="https://telegram.me/{4}/">{3}</a>\n<b>Id</b>: {5}\n<b>Message Id</b>: {6}\n<b>From</b>: {7}'.format(self.user,self.username,
-                                                                                                                                                                                                                                                            msg_re,username, 
-                                                                                                                                                                                                                                                            username, user_id,id_msg,group)
-            self.bot.sendMessage(chat_id='-1001099322003',
+            group,    msg_re      = self.msg['chat']['title'],                        self.msg['reply_to_message']['text']
+            id_msg,   user_id     = self.msg['reply_to_message']['message_id'],       self.msg['reply_to_message']['from']['id']
+            username, userresp    = self.msg['reply_to_message']['from']['username'], self.msg['reply_to_message']['from']['first_name']
+            
+            msg = '<b>User</b>: <a href="https://telegram.me/{1}/">{0}</a>' 
+            '<b>reported this message:</b>\n\n<i>{2}</i>\n\n<b>User Reported:</b>' 
+            '<a href="https://telegram.me/{4}/">{3}</a>\n<b>Id</b>: {5}\n'
+            '<b>Message Id</b>: {6}\n<b>From</b>: {7}'.format(self.user,self.username,msg_re,username,username, user_id,id_msg,group)
+            
+            self.bot.sendMessage(chat_id='ANY ID OF ONE CHANNEL, PM... anything to send the report',
                                  parse_mode='HTML',
                                  text=msg,
                                  disable_web_page_preview=True)
+
             self.bot.sendMessage(chat_id=self.chat_id,
                                  parse_mode='Markdown',
                                  text='*User reported to Admin.*',

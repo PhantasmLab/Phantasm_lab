@@ -1,6 +1,8 @@
 from pathlib import Path
-from os import makedirs
-from os import mknod
+from os import mknod, makedirs, remove
+import csv
+from datetime import datetime
+from shutil import rmtree
 
 class data:
 
@@ -40,68 +42,78 @@ class data:
 
 
     @classmethod
-    def afk(cls, user=None, listafk=False):
+    def afk(cls, user):
+        a = None
         while 1:
             try:
-                if listafk:
-                    lista = open(cls.path.__str__() + '/afk.txt', 'r')
-                    lista_r = lista.read()
-                    lista.close()
-                    if user in lista_r:
-                        return True
+                if 1:
+                    with open(cls.path.__str__() + '/afk.csv') as csv_file:
+                        reader = csv.DictReader(csv_file, delimiter=',')
+                        afk = [line['afk'] for line in reader]
+                        if user in afk:
+                            a = False
+                        else:
+                            with open(cls.path.__str__() + '/afk.csv', 'a') as file:
+                                append = csv.writer(file,delimiter=',')
+                                append.writerow([user,datetime.now().strftime('%Y/%m/%d %H:%M')])
+                            a = True
             except FileNotFoundError:
-                mknod(cls.path.__str__() + '/afk.txt')
+                with open(cls.path.__str__() + '/afk.csv', 'w') as csv_file:
+                    write = csv.writer(csv_file, delimiter=',')
+                    write.writerow(['afk','hour'])             
             else:
                 break
+        return a
         
-        else:
-            return False
-        with open(cls.path.__str__() + '/afk.txt', 'a') as file:
-            file.write(user+'\n')
-    
 
     @classmethod
     def afklist_and_blacklist(cls, which):
         while 1:
             try:
-                with open(cls.path.__str__() + '/{}.txt'.format(which), 'r') as file:
-                    return file.read()
+                if which == 'afk.csv':
+                    with open(cls.path.__str__() + '/{}'.format(which)) as file:
+                        reader = csv.DictReader(file, delimiter=',')
+                        afklist = [line['afk']+'\n' for line in reader]
+                        return ''.join(afklist)
+                else:
+                    with open(cls.path.__str__() + '/{}'.format(which), 'r') as file:
+                        return file.read() 
             except FileNotFoundError:
-                mknod(cls.path.__str__() + '/{}.txt'.format(which))
+                if which == 'blacklist.txt':
+                    mknod(cls.path.__str__() + '/{}'.format(which))
+                else:
+                    with open(cls.path.__str__() + '/afk.csv', 'w') as csv_file:
+                        write = csv.writer(csv_file, delimiter=',')
+                        write.writerow(['afk','hour'])      
             else:
                 break
 
     @classmethod
     def clearlist_x(cls, clear):
-        clear_dict = {'afklist' : 'afk.txt',
-                      'blacklist' : 'list_ban.txt',
-                      'warn' : 'warn.txt'
-        }
+        clear_dict = {'afk.csv','blacklist.txt','warn.txt'}
         
         if len(clear) > 2:
-            for k in clear_dict.keys():
-                with open(cls.path.__str__() + '/{}.txt'.format(clear_dict[k]), 'w') as limparlista:
+            for i in clear_dict:
+                with open(cls.path.__str__() + '/{}'.format(i), 'w') as limparlista:
                     limparlista.write('')
                 return '<b>Selected Lists Clear.</b>'  
         else:
             if 'blacklist' in clear:
-                with open(cls.path.__str__() + '/blacklist.txt', 'w') as limparlista:
-                    limparlista.write('')
+                remove(cls.path.__str__() + '/blacklist.txt')
                 return '<b>Blacklist clear!</b>' 
         
             elif 'afklist' in clear:
-                with open(cls.path.__str__() + '/afk.txt', 'w') as limparlista:
-                    limparlista.write('')
+                remove(cls.path.__str__() + '/afk.csv')
                 return '<b>Afklist clear!</b>' 
         
             elif 'warn' in clear:
-                with open(cls.path.__str__() + '/warn.txt', 'w') as limparlista:
-                    limparlista.write('')
+                remove(cls.path.__str__() + '/warn.txt')
                 return '<b>warn clear!</b>' 
         
             elif 'all' in clear:
-                with open(cls.path.__str__() + '/blacklist.txt', 'w') as limparlista, open(cls.path.__str__() + '/afk.txt', 'w') as limparlista, open (cls.path.__str__() + '/warn.txt', 'w') as limparlista:
-                    limparlista.write('')
+                rmtree(cls.path.__str__() + '/*')
                 return '<b>All clear!</b>'
             else: 
                 return '<b>Invalid Command, Requires argument.\nTry:</b> /clear blacklist afklist...'
+
+    

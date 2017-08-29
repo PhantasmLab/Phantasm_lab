@@ -44,6 +44,7 @@ def auto_back(func):
                             if d >= timedelta(minutes=1_440):
                                 msg['back'] = '{0} is back, after being {1} hour afk'.format(first_name, d)
                                 del_row(path,first_name)
+                                break
                             elif d >=  timedelta(minutes=60):
                                 print(d)
                                 msg['back'] = '{0} is back, after being {1} hour afk'.format(first_name, str(d)[:-6])
